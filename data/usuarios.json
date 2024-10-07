@@ -1,78 +1,50 @@
 [
-    {
-      "id": "1e02d730-94d3-4a3f-8c1d-6a689ac8e137",
-      "nombre": "Juan",
-      "apellido": "Pérez",
-      "cui": 20345678901,
-      "empresa": "Tech Solutions",
-      "telefono": 1112345678,
-      "email": "juan.perez@techsolutions.com",
-      "direccion": "Av. Siempre Viva 742",
-      "ciudad": "Buenos Aires",
-      "pais": "Argentina",
-      "servicioOfrecido": "Desarrollo de software",
-      "servicioRequerido": "Consultoría en IT",
-      "capacidadOperativa": "100 empleados"
-    },
-    {
-      "id": "c4a1b35a-b20e-478d-9271-e65f762cd4f2",
-      "nombre": "María",
-      "apellido": "García",
-      "cui": 27345678902,
-      "empresa": "Innova Marketing",
-      "telefono": 1139876543,
-      "email": "maria.garcia@innova.com",
-      "direccion": "Calle Falsa 123",
-      "ciudad": "Córdoba",
-      "pais": "Argentina",
-      "servicioOfrecido": "Marketing digital",
-      "servicioRequerido": "Desarrollo web",
-      "capacidadOperativa": "50 empleados"
-    },
-    {
-      "id": "f705d3a1-7ba4-48bb-9a10-cf4e1c19b5d7",
-      "nombre": "Carlos",
-      "apellido": "Lopez",
-      "cui": 20345678903,
-      "empresa": "EcoBuild",
-      "telefono": 1123456789,
-      "email": "carlos.lopez@ecobuild.com",
-      "direccion": "Boulevard del Bosque 456",
-      "ciudad": "Rosario",
-      "pais": "Argentina",
-      "servicioOfrecido": "Construcción ecológica",
-      "servicioRequerido": "Proveedores de materiales",
-      "capacidadOperativa": "200 empleados"
-    },
-    {
-      "id": "9f1a27c5-f4cf-44a5-bc47-342eb7b5fc01",
-      "nombre": "Ana",
-      "apellido": "Rodríguez",
-      "cui": 27345678904,
-      "empresa": "Green Energy",
-      "telefono": 1145678910,
-      "email": "ana.rodriguez@greenenergy.com",
-      "direccion": "Ruta Nacional 9 km 52",
-      "ciudad": "Mendoza",
-      "pais": "Argentina",
-      "servicioOfrecido": "Energías renovables",
-      "servicioRequerido": "Ingeniería eléctrica",
-      "capacidadOperativa": "80 empleados"
-    },
-    {
-      "id": "b3a2c857-62f4-4b12-931d-9f2f847e2d32",
-      "nombre": "Luis",
-      "apellido": "Martínez",
-      "cui": 20345678905,
-      "empresa": "AgroTech",
-      "telefono": 1156789012,
-      "email": "luis.martinez@agrotech.com",
-      "direccion": "Camino Rural 75",
-      "ciudad": "Salta",
-      "pais": "Argentina",
-      "servicioOfrecido": "Tecnología agrícola",
-      "servicioRequerido": "Logística",
-      "capacidadOperativa": "120 empleados"
-    }
-  ]
-  
+  {
+    "id": "1e02d730-94d3-4a3f-8c1d-6a689ac8e137",
+    "nombre": "Juan",
+    "apellido": "Pérez",
+    "cui": 20345678901,
+    "empresa": "Tractor Solutions",
+    "telefono": 1112345678,
+    "email": "juan.perez@tractorsolutions.com",
+    "direccion": "Av. Siempre Viva 742",
+    "ciudad": "Buenos Aires",
+    "pais": "Argentina",
+    "servicioOfrecido": "Venta de Tractores",
+    "servicioRequerido": "Repuestos",
+    "capacidadOperativa": "100 tractores disponibles"
+  },
+  {
+    "id": "b3a2c857-62f4-4b12-931d-9f2f847e2d32",
+    "nombre": "Luis",
+    "apellido": "Martínez",
+    "cui": 20345678902,
+    "empresa": "Tractor Agro",
+    "telefono": 1156789012,
+    "email": "luis.martinez@tractoragro.com",
+    "direccion": "Ruta Nacional 9 km 52",
+    "ciudad": "Córdoba",
+    "pais": "Argentina",
+    "servicioOfrecido": "Alquiler de Tractores",
+    "servicioRequerido": "Reparación",
+    "capacidadOperativa": "50 tractores disponibles"
+  },
+  {
+    "id": "1728344630882",
+    "nombre": "Mario ",
+    "apellido": "Villarreal ",
+    "email": "solomsv@yahoo.com.ar",
+    "telefono": "0298315464751",
+    "empresa": "agricoles",
+    "ciudad": "San Cayetano"
+  },
+  {
+    "id": "1728344667247",
+    "nombre": "ema",
+    "apellido": "carratu",
+    "email": "solomsv@yahoo.com.ar",
+    "telefono": "0298315464751",
+    "empresa": "agrolist",
+    "ciudad": "San Cayetano"
+  }
+]
