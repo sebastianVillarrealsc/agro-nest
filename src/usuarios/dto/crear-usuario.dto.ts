@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsEmail, IsUUID } from 'class-validator';
+import { IsString, IsNumber, IsEmail, IsUUID, IsOptional } from 'class-validator';
 
 export class CrearUsuarioDto {
   @IsUUID()
@@ -16,8 +16,8 @@ export class CrearUsuarioDto {
   @IsString()
   empresa: string;
 
-  @IsNumber()
-  telefono: number;
+  @IsString()
+  telefono: string;
 
   @IsEmail()
   email: string;
@@ -32,11 +32,13 @@ export class CrearUsuarioDto {
   pais: string;
 
   @IsString()
-  servicioOfrecido: string;
+  servicioOfrecido: string;  // Añadimos este campo
 
   @IsString()
-  servicioRequerido: string;
+  servicioRequerido: string;  // Añadimos este campo
 
+  @IsOptional() 
   @IsString()
-  capacidadOperativa: string;
+  imagenUrl?: string;
 }
+
