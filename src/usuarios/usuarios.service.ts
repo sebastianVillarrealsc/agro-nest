@@ -1,72 +1,171 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Usuario } from './entities/usuario.entity';  // Importo la entidad Usuario, que representa a la tabla de usuarios en la base de datos
-import { CrearUsuarioDto } from './dto/crear-usuario.dto';  // Importo el DTO para la creación de usuarios
-import { ModificarUsuarioDto } from './dto/modificar-usuario.dto';  // Importo el DTO para la modificación de usuarios
+import { Usuario, RolesPermitidos } from './entities/usuario.entity';
+import { CrearUsuarioDto } from './dto/crear-usuario.dto';
+import { ModificarUsuarioDto } from './dto/modificar-usuario.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsuariosService {
-  // Inyecto el repositorio de la entidad `Usuario` para interactuar con la base de datos
   constructor(
     @InjectRepository(Usuario)
-    private usuariosRepository: Repository<Usuario>,  // Este repositorio manejará todas las consultas de la tabla `Usuario`
+    private readonly usuariosRepository: Repository<Usuario>,
   ) {}
 
-  // Método para crear un nuevo usuario
-  async create(crearUsuarioDto: CrearUsuarioDto, imagenUrl: string): Promise<Usuario> {
-    // Uso el método `create` del repositorio para crear un nuevo usuario en memoria
+  /**
+   * Crear un nuevo usuario
+   */
+  async create(
+    crearUsuarioDto: CrearUsuarioDto,
+    imagenUrl: string,
+  ): Promise<Usuario> {
+    await this.verificarEmailUnico(crearUsuarioDto.email);
+
+    const hashedPassword = await this.hashPassword(crearUsuarioDto.contrasena);
+
     const nuevoUsuario = this.usuariosRepository.create({
-      ...crearUsuarioDto,  // Asigno los valores del DTO (nombre, apellido, etc.)
-      imagenUrl,  // Asigno el nombre de la imagen que se subió, si existe
+      ...crearUsuarioDto,
+      contrasena: hashedPassword,
+      imagenUrl,
+      balanceTokens: 0,
+      rol: RolesPermitidos.ProveedorInsumos,
     });
 
-    // Luego guardo el usuario en la base de datos usando el método `save`
     return await this.usuariosRepository.save(nuevoUsuario);
   }
 
-  // Método para obtener todos los usuarios
+  /**
+   * Validar credenciales de usuario
+   */
+  async validarCredenciales(
+    email: string,
+    contrasena: string,
+  ): Promise<Usuario> {
+    const usuario = await this.usuariosRepository.findOne({ where: { email } });
+    if (!usuario || !(await bcrypt.compare(contrasena, usuario.contrasena))) {
+      throw new BadRequestException('Correo o contraseña incorrectos.');
+    }
+    return usuario;
+  }
+
+  /**
+   * Obtener todos los usuarios
+   */
   async obtenerUsuarios(): Promise<Usuario[]> {
-    // Uso el método `find` del repositorio para obtener todos los usuarios de la tabla
-    return await this.usuariosRepository.find();
+    return this.usuariosRepository.find();
   }
 
-  // Método para obtener un usuario por su ID
+  /**
+   * Obtener un usuario por su ID
+   */
   async obtenerUsuarioPorId(id: string): Promise<Usuario> {
-    // Uso el método `findOne` con el ID del usuario para devolver un solo usuario o `null` si no lo encuentra
-    return await this.usuariosRepository.findOne({ where: { id } });
+    const usuario = await this.usuariosRepository.findOne({ where: { id } });
+    if (!usuario) {
+      throw new NotFoundException('Usuario no encontrado.');
+    }
+    return usuario;
   }
 
-  // Método para modificar un usuario existente
-  async modificarUsuario(id: string, modificarUsuarioDto: ModificarUsuarioDto): Promise<Usuario> {
-    // Actualizo el usuario en la base de datos utilizando el ID y los nuevos valores del DTO
-    await this.usuariosRepository.update(id, modificarUsuarioDto);
+  /**
+   * Modificar un usuario existente
+   */
+  async modificarUsuario(
+    id: string,
+    modificarUsuarioDto: ModificarUsuarioDto,
+  ): Promise<Usuario> {
+    await this.obtenerUsuarioPorId(id);
 
-    // Después de la actualización, busco el usuario actualizado y lo devuelvo
-    return await this.obtenerUsuarioPorId(id);
+    if (modificarUsuarioDto.contrasena) {
+      modificarUsuarioDto.contrasena = await this.hashPassword(
+        modificarUsuarioDto.contrasena,
+      );
+    }
+
+    await this.usuariosRepository.update(id, { ...modificarUsuarioDto });
+    return this.obtenerUsuarioPorId(id);
   }
 
-  // Método para eliminar un usuario (se añadió esta función que faltaba)
+  /**
+   * Eliminar un usuario por su ID
+   */
   async eliminarUsuario(id: string): Promise<boolean> {
-    // Uso el método `delete` del repositorio para eliminar el usuario con el ID dado
-    const resultado = await this.usuariosRepository.delete(id);
-
-    // Si `affected` es mayor a 0, significa que se eliminó el usuario correctamente
+    const usuario = await this.obtenerUsuarioPorId(id);
+    const resultado = await this.usuariosRepository.delete(usuario.id);
     return resultado.affected > 0;
   }
 
-  // Método para buscar usuarios por diferentes atributos
+  /**
+   * Buscar usuarios por atributos
+   */
   async buscarUsuarios(query: { [key: string]: string }): Promise<Usuario[]> {
-    // Creo una consulta dinámica usando el QueryBuilder para buscar usuarios con los atributos dados
     const qb = this.usuariosRepository.createQueryBuilder('usuario');
-
-    // Recorro todos los atributos que se pasan en el query (por ejemplo, nombre o empresa)
-    Object.keys(query).forEach((key) => {
-      // Agrego una condición a la consulta para cada atributo
-      qb.andWhere(`usuario.${key} LIKE :${key}`, { [key]: `%${query[key]}%` });
+    Object.entries(query).forEach(([key, value]) => {
+      qb.andWhere(`usuario.${key} LIKE :${key}`, { [key]: `%${value}%` });
     });
+    return qb.getMany();
+  }
 
-    // Ejecuto la consulta y devuelvo los resultados
-    return await qb.getMany();
+  /**
+   * Incrementar tokens
+   */
+  async agregarTokens(id: string, cantidad: number): Promise<Usuario> {
+    const usuario = await this.obtenerUsuarioPorId(id);
+    usuario.balanceTokens += cantidad;
+    return this.usuariosRepository.save(usuario);
+  }
+
+  /**
+   * Decrementar tokens
+   */
+  async quitarTokens(id: string, cantidad: number): Promise<Usuario> {
+    const usuario = await this.obtenerUsuarioPorId(id);
+    if (usuario.balanceTokens < cantidad) {
+      throw new BadRequestException('Balance insuficiente.');
+    }
+    usuario.balanceTokens -= cantidad;
+    return this.usuariosRepository.save(usuario);
+  }
+
+  /**
+   * Cambiar el rol de un usuario
+   */
+  async cambiarRol(id: string, nuevoRol: RolesPermitidos): Promise<Usuario> {
+    const usuario = await this.obtenerUsuarioPorId(id);
+
+    if (!Object.values(RolesPermitidos).includes(nuevoRol)) {
+      throw new BadRequestException(
+        `El rol "${nuevoRol}" no es válido. Roles permitidos: ${Object.values(
+          RolesPermitidos,
+        ).join(', ')}`,
+      );
+    }
+
+    usuario.rol = nuevoRol;
+    return this.usuariosRepository.save(usuario);
+  }
+
+  /**
+   * Método privado para verificar si el email ya está registrado
+   */
+  private async verificarEmailUnico(email: string): Promise<void> {
+    const usuarioExistente = await this.usuariosRepository.findOne({
+      where: { email },
+    });
+    if (usuarioExistente) {
+      throw new BadRequestException('El correo electrónico ya está registrado.');
+    }
+  }
+
+  /**
+   * Método privado para hashear contraseñas
+   */
+  private async hashPassword(password: string): Promise<string> {
+    const salt = await bcrypt.genSalt();
+    return bcrypt.hash(password, salt);
   }
 }

@@ -1,4 +1,20 @@
-import { IsString, IsNumber, IsEmail, IsUUID, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsEmail,
+  IsUUID,
+  IsOptional,
+  IsEnum,
+  MinLength,
+} from 'class-validator';
+
+// Definimos un Enum para los roles permitidos
+export enum RolesPermitidos {
+  Publicidad = 'Publicidad',
+  ProveedorInsumos = 'Proveedor de Insumos',
+  ProveedorServicios = 'Proveedor de Servicios',
+  Mecenas = 'Mecenas',
+}
 
 export class CrearUsuarioDto {
   @IsUUID()
@@ -32,13 +48,21 @@ export class CrearUsuarioDto {
   pais: string;
 
   @IsString()
-  servicioOfrecido: string;  // Añadimos este campo
+  servicioOfrecido: string;
 
   @IsString()
-  servicioRequerido: string;  // Añadimos este campo
+  servicioRequerido: string;
 
-  @IsOptional() 
+  @IsOptional()
   @IsString()
   imagenUrl?: string;
-}
 
+  // Campo para el rol del usuario, validado con el Enum
+  @IsEnum(RolesPermitidos, { message: 'El rol debe ser uno de los valores permitidos.' })
+  rol: RolesPermitidos;
+
+  // Campo de contraseña con validación de longitud mínima
+  @IsString()
+  @MinLength(6, { message: 'La contraseña debe tener al menos 6 caracteres' })
+  contrasena: string;
+}
