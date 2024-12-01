@@ -13,7 +13,7 @@ import { UsuariosModule } from '../usuarios/usuarios.module'; // Módulo Usuario
     TypeOrmModule.forFeature([Usuario]), // Registrar entidad Usuario
     PassportModule.register({ defaultStrategy: 'jwt' }), // Configurar Passport con JWT
     JwtModule.register({
-      secret: 'SECRETO_SUPER_SEGURO', // Cambiar en producción
+      secret: 'mi_secreto', // Cambiar en producción
       signOptions: { expiresIn: '1h' }, // Configuración de expiración del token
     }),
     forwardRef(() => UsuariosModule), // Usar forwardRef para romper la dependencia circular

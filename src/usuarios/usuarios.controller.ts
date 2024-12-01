@@ -71,11 +71,11 @@ export class UsuariosController {
   /**
    * Obtener todos los usuarios (protegido)
    */
- // @UseGuards(JwtAuthGuard)
-// @Get()
- // async obtenerUsuarios(): Promise<Usuario[]> {
-  //  return this.usuariosService.obtenerUsuarios();
- //}
+  @UseGuards(JwtAuthGuard)
+  @Get()
+   async obtenerUsuarios(): Promise<Usuario[]> {
+    return this.usuariosService.obtenerUsuarios();
+   }
 
   /**
    * Obtener un usuario por ID (protegido)
