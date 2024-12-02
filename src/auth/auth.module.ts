@@ -25,7 +25,7 @@ import { UsuariosModule } from '../usuarios/usuarios.module'; // Módulo Usuario
   ],
   exports: [
     AuthService, // Exportar servicio para uso externo
-    JwtModule, // Exportar módulo JWT
+    JwtModule , // Exportar módulo JWT
   ],
 })
 export class AuthModule {}
