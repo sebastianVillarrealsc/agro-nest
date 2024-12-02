@@ -1,4 +1,18 @@
-import { Controller, Post, Body, Get, Param, Put, Delete, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Put,
+  Delete,
+  Query,
+  Patch,
+  UploadedFile,
+  UseInterceptors,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
@@ -6,66 +20,150 @@ import { extname } from 'path';
 import { UsuariosService } from './usuarios.service';
 import { CrearUsuarioDto } from './dto/crear-usuario.dto';
 import { ModificarUsuarioDto } from './dto/modificar-usuario.dto';
-import { Usuario } from './entities/usuario.entity';
+import { Usuario, RolesPermitidos } from './entities/usuario.entity';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuthService } from '../auth/auth.service';
 
 @Controller('usuarios')
 export class UsuariosController {
-  constructor(private readonly usuariosService: UsuariosService) {}
+  constructor(
+    private readonly usuariosService: UsuariosService,
+    private readonly authService: AuthService,
+  ) {}
 
-  // Función para generar un nombre único para las imágenes subidas
+  // Generar un nombre único para las imágenes subidas
   private static generarNombreImagen(file: Express.Multer.File): string {
-    return uuidv4() + extname(file.originalname);  // Generar un nombre único basado en UUID y extensión del archivo
+    return uuidv4() + extname(file.originalname);
   }
 
-  // Endpoint para subir una imagen y crear un nuevo usuario
+  /**
+   * Crear un nuevo usuario
+   */
   @Post()
-  @UseInterceptors(FileInterceptor('imagen', {
-    storage: diskStorage({
-      destination: './uploads',  // Carpeta donde se almacenarán las imágenes
-      filename: (req, file, cb) => {
-        const nombreImagen = UsuariosController.generarNombreImagen(file);  // Generamos el nombre de la imagen
-        cb(null, nombreImagen);  // Guardamos la imagen con el nombre generado
-      },
+  @UseInterceptors(
+    FileInterceptor('imagen', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const nombreImagen = UsuariosController.generarNombreImagen(file);
+          cb(null, nombreImagen);
+        },
+      }),
     }),
-  }))
+  )
   async create(
-    @Body() crearUsuarioDto: CrearUsuarioDto,  // Obtenemos los datos del usuario desde el cuerpo de la petición
-    @UploadedFile() file: Express.Multer.File,  // Archivo de imagen subido
+    @Body() crearUsuarioDto: CrearUsuarioDto,
+    @UploadedFile() file: Express.Multer.File,
   ): Promise<Usuario> {
-    const imagenUrl = file ? file.filename : null;  // Si se sube una imagen, guardamos su nombre, si no, asignamos null
-    return this.usuariosService.create(crearUsuarioDto, imagenUrl);  // Llamamos al servicio para crear el usuario con la imagen
+    const imagenUrl = file ? file.filename : null;
+    return this.usuariosService.create(crearUsuarioDto, imagenUrl);
   }
 
-  // Endpoint para obtener todos los usuarios
+  /**
+   * Autenticación de usuario
+   */
+  @Post('auth/login')
+  async login(@Body() loginData: { email: string; contrasena: string }): Promise<{ token: string; user: Usuario }> {
+    const { token, user } = await this.authService.login(loginData);
+    return { token, user };
+  }
+
+  /**
+   * Obtener todos los usuarios (protegido)
+   */
+  @UseGuards(JwtAuthGuard)
   @Get()
-  async obtenerUsuarios(): Promise<Usuario[]> {
-    return this.usuariosService.obtenerUsuarios();  // Llamamos al servicio para obtener todos los usuarios
-  }
+   async obtenerUsuarios(): Promise<Usuario[]> {
+    return this.usuariosService.obtenerUsuarios();
+   }
 
-  // Endpoint para obtener un usuario por su ID
+  /**
+   * Obtener un usuario por ID (protegido)
+   */
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async obtenerUsuarioPorId(@Param('id') id: string): Promise<Usuario> {
-    return this.usuariosService.obtenerUsuarioPorId(id);  // Llamamos al servicio para obtener un usuario por su ID
+    return this.usuariosService.obtenerUsuarioPorId(id);
   }
 
-  // Endpoint para modificar un usuario existente
+  /**
+   * Modificar un usuario (protegido)
+   */
+  @UseGuards(JwtAuthGuard)
   @Put(':id')
   async modificarUsuario(
-    @Param('id') id: string,  // Obtenemos el ID del usuario que queremos modificar
-    @Body() modificarUsuarioDto: ModificarUsuarioDto,  // Obtenemos los nuevos datos del usuario
+    @Param('id') id: string,
+    @Body() modificarUsuarioDto: ModificarUsuarioDto,
   ): Promise<Usuario> {
-    return this.usuariosService.modificarUsuario(id, modificarUsuarioDto);  // Llamamos al servicio para modificar al usuario
+    return this.usuariosService.modificarUsuario(id, modificarUsuarioDto);
   }
 
-  // Endpoint para eliminar un usuario por su ID
+  /**
+   * Eliminar un usuario (protegido)
+   */
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async eliminarUsuario(@Param('id') id: string): Promise<boolean> {
-    return this.usuariosService.eliminarUsuario(id);  // Llamamos al servicio para eliminar un usuario
+    return this.usuariosService.eliminarUsuario(id);
   }
 
-  // Endpoint para buscar usuarios por diferentes atributos (nombre, empresa, etc.)
+  /**
+   * Buscar usuarios por atributos (protegido)
+   */
+  @UseGuards(JwtAuthGuard)
   @Get('buscar')
   async buscarUsuarios(@Query() query: { [key: string]: string }): Promise<Usuario[]> {
-    return this.usuariosService.buscarUsuarios(query);  // Llamamos al servicio para buscar usuarios según los atributos que se pasen como parámetros
+    return this.usuariosService.buscarUsuarios(query);
+  }
+
+  /**
+   * Obtener balance de tokens de un usuario (protegido)
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/balance')
+  async obtenerBalance(@Param('id') id: string): Promise<{ balanceTokens: number }> {
+    const usuario = await this.usuariosService.obtenerUsuarioPorId(id);
+    return { balanceTokens: usuario?.balanceTokens || 0 };
+  }
+
+  /**
+   * Agregar tokens al balance de un usuario (protegido)
+   */
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/agregar-tokens')
+  async agregarTokens(
+    @Param('id') id: string,
+    @Body('cantidad') cantidad: number,
+  ): Promise<Usuario> {
+    return this.usuariosService.agregarTokens(id, cantidad);
+  }
+
+  /**
+   * Quitar tokens del balance de un usuario (protegido)
+   */
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/quitar-tokens')
+  async quitarTokens(
+    @Param('id') id: string,
+    @Body('cantidad') cantidad: number,
+  ): Promise<Usuario> {
+    return this.usuariosService.quitarTokens(id, cantidad);
+  }
+
+  /**
+   * Cambiar el rol de un usuario (protegido)
+   */
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/rol')
+  async cambiarRol(
+    @Param('id') id: string,
+    @Body('rol') rol: string,
+  ): Promise<Usuario> {
+    if (!Object.values(RolesPermitidos).includes(rol as RolesPermitidos)) {
+      throw new BadRequestException(
+        `El rol "${rol}" no es válido. Los roles permitidos son: ${Object.values(RolesPermitidos).join(', ')}`,
+      );
+    }
+    return this.usuariosService.cambiarRol(id, rol as RolesPermitidos);
   }
 }
