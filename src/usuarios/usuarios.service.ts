@@ -64,6 +64,7 @@ export class UsuariosService {
    * Obtener un usuario por su ID
    */
   async obtenerUsuarioPorId(id: string): Promise<Usuario> {
+    console.log (id)
     const usuario = await this.usuariosRepository.findOne({ where: { id } });
     if (!usuario) {
       throw new NotFoundException('Usuario no encontrado.');

@@ -1,4 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Token } from '../../tokens/entities/token.entity';
+import { Transaccion } from '../../transacciones/entities/transaccion.entity';
+import { OneToMany } from 'typeorm';
 
 // Enum para roles permitidos
 export enum RolesPermitidos {
@@ -52,4 +55,9 @@ export class Usuario {
 
   @Column({ type: 'varchar', length: 255 })
   contrasena: string; // Campo para la contraseña
+  @OneToMany(() => Token, (token) => token.usuario)
+  tokens: Token[];
+
+  @OneToMany(() => Transaccion, (transaccion) => transaccion.usuario)
+  transacciones: Transaccion[];
 }

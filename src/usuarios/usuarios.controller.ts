@@ -4,6 +4,7 @@ import {
   Body,
   Get,
   Param,
+  Request,
   Put,
   Delete,
   Query,
@@ -120,9 +121,11 @@ export class UsuariosController {
    * Obtener balance de tokens de un usuario (protegido)
    */
   @UseGuards(JwtAuthGuard)
-  @Get(':id/balance')
-  async obtenerBalance(@Param('id') id: string): Promise<{ balanceTokens: number }> {
-    const usuario = await this.usuariosService.obtenerUsuarioPorId(id);
+  @Get('/balance')
+  async obtenerBalance(@Request() req): Promise<{ balanceTokens: number }> {
+     const userId = req.sub
+     console.log (userId)
+    const usuario = await this.usuariosService.obtenerUsuarioPorId(userId);
     return { balanceTokens: usuario?.balanceTokens || 0 };
   }
 
