@@ -7,11 +7,8 @@ export class JwtAuthGuard implements CanActivate {
     constructor(private jwtService: JwtService) { }
 
     async canActivate(context: ExecutionContext) {
-
         const request = context.switchToHttp().getRequest();
         const token = this.extractTokenFromHeader(request);
-        console.log(`Este es el token: ${token}`);
-
 
         if (!token) {
             throw new UnauthorizedException();
@@ -22,7 +19,6 @@ export class JwtAuthGuard implements CanActivate {
                 secret: process.env.JWT_SECRET,
             });
             request.user = { sub: payload.sub, email: payload.email };
-            console.log(payload, request.user);
         } catch (error) {
             throw new UnauthorizedException();
         }
@@ -32,7 +28,6 @@ export class JwtAuthGuard implements CanActivate {
 
     private extractTokenFromHeader(request: Request): string | undefined {
         const [type, token] = request.headers.authorization?.split(' ') ?? [];
-
         return type === 'Bearer' ? token : undefined;
     }
 }

@@ -39,10 +39,9 @@ export class TransaccionesService {
       where: { usuario: { id: usuarioId } },
     });
 
-    if (!transacciones.length) {
-      throw new NotFoundException('No se encontraron transacciones para este usuario.');
-    }
-
+    // if (!transacciones.length) {
+    //   throw new NotFoundException('No se encontraron transacciones para este usuario.');
+    // }
     return transacciones;
   }
 }
