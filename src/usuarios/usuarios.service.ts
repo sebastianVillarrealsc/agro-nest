@@ -67,7 +67,7 @@ export class UsuariosService {
     console.log (id)
     const usuario = await this.usuariosRepository.findOne({ where: { id } });
     if (!usuario) {
-      throw new NotFoundException('Usuario no encontrado.');
+      throw new NotFoundException(`Usuario no encontrado. Mierda ${id}`);
     }
     return usuario;
   }

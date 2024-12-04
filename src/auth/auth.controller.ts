@@ -9,7 +9,9 @@ export class AuthController {
 
   @Public() // Decorador para permitir acceso sin autenticación
   @Post('login') // Endpoint específico para login
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto): Promise<{ token: string }> {
+    console.log(loginDto)
+    const { token, user } = await this.authService.login(loginDto);
+    return { token };
   }
 }

@@ -59,7 +59,7 @@ export class CrearUsuarioDto {
 
   // Campo para el rol del usuario, validado con el Enum
   @IsEnum(RolesPermitidos, { message: 'El rol debe ser uno de los valores permitidos.' })
-  rol: RolesPermitidos;
+  rol?: RolesPermitidos;
 
   // Campo de contraseña con validación de longitud mínima
   @IsString()

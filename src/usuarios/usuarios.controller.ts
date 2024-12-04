@@ -22,15 +22,15 @@ import { UsuariosService } from './usuarios.service';
 import { CrearUsuarioDto } from './dto/crear-usuario.dto';
 import { ModificarUsuarioDto } from './dto/modificar-usuario.dto';
 import { Usuario, RolesPermitidos } from './entities/usuario.entity';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { AuthService } from '../auth/auth.service';
+// import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+// import { AuthService } from '../auth/auth.service';
+import { JwtAuthGuard } from 'src/auth/auth.guard';
 
 @Controller('usuarios')
 export class UsuariosController {
   constructor(
     private readonly usuariosService: UsuariosService,
-    private readonly authService: AuthService,
-  ) {}
+  ) { }
 
   // Generar un nombre único para las imágenes subidas
   private static generarNombreImagen(file: Express.Multer.File): string {
@@ -59,30 +59,20 @@ export class UsuariosController {
     const imagenUrl = file ? file.filename : null;
     return this.usuariosService.create(crearUsuarioDto, imagenUrl);
   }
-
-  /**
-   * Autenticación de usuario
-   */
-  @Post('auth/login')
-  async login(@Body() loginData: { email: string; contrasena: string }): Promise<{ token: string; user: Usuario }> {
-    const { token, user } = await this.authService.login(loginData);
-    return { token, user };
-  }
-
   /**
    * Obtener todos los usuarios (protegido)
    */
+  @Get('all')
   @UseGuards(JwtAuthGuard)
-  @Get()
-   async obtenerUsuarios(): Promise<Usuario[]> {
+  async obtenerUsuarios(): Promise<Usuario[]> {
     return this.usuariosService.obtenerUsuarios();
-   }
+  }
 
   /**
    * Obtener un usuario por ID (protegido)
    */
+  @Get('one/:id')
   @UseGuards(JwtAuthGuard)
-  @Get(':id')
   async obtenerUsuarioPorId(@Param('id') id: string): Promise<Usuario> {
     return this.usuariosService.obtenerUsuarioPorId(id);
   }
@@ -90,8 +80,8 @@ export class UsuariosController {
   /**
    * Modificar un usuario (protegido)
    */
-  @UseGuards(JwtAuthGuard)
   @Put(':id')
+  @UseGuards(JwtAuthGuard)
   async modificarUsuario(
     @Param('id') id: string,
     @Body() modificarUsuarioDto: ModificarUsuarioDto,
@@ -102,8 +92,8 @@ export class UsuariosController {
   /**
    * Eliminar un usuario (protegido)
    */
-  @UseGuards(JwtAuthGuard)
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   async eliminarUsuario(@Param('id') id: string): Promise<boolean> {
     return this.usuariosService.eliminarUsuario(id);
   }
@@ -111,8 +101,8 @@ export class UsuariosController {
   /**
    * Buscar usuarios por atributos (protegido)
    */
-  @UseGuards(JwtAuthGuard)
   @Get('buscar')
+  @UseGuards(JwtAuthGuard)
   async buscarUsuarios(@Query() query: { [key: string]: string }): Promise<Usuario[]> {
     return this.usuariosService.buscarUsuarios(query);
   }
@@ -120,20 +110,20 @@ export class UsuariosController {
   /**
    * Obtener balance de tokens de un usuario (protegido)
    */
+  @Get('balance')
   @UseGuards(JwtAuthGuard)
-  @Get('/balance')
   async obtenerBalance(@Request() req): Promise<{ balanceTokens: number }> {
-     const userId = req.sub
-     console.log (userId)
-    const usuario = await this.usuariosService.obtenerUsuarioPorId(userId);
-    return { balanceTokens: usuario?.balanceTokens || 0 };
+      const userId = req.user.sub; 
+      const usuario = await this.usuariosService.obtenerUsuarioPorId(userId);
+      return { balanceTokens: usuario?.balanceTokens || 0 };
   }
+  
 
   /**
    * Agregar tokens al balance de un usuario (protegido)
    */
-  @UseGuards(JwtAuthGuard)
   @Patch(':id/agregar-tokens')
+  @UseGuards(JwtAuthGuard)
   async agregarTokens(
     @Param('id') id: string,
     @Body('cantidad') cantidad: number,
@@ -144,8 +134,8 @@ export class UsuariosController {
   /**
    * Quitar tokens del balance de un usuario (protegido)
    */
-  @UseGuards(JwtAuthGuard)
   @Patch(':id/quitar-tokens')
+  @UseGuards(JwtAuthGuard)
   async quitarTokens(
     @Param('id') id: string,
     @Body('cantidad') cantidad: number,
@@ -156,8 +146,8 @@ export class UsuariosController {
   /**
    * Cambiar el rol de un usuario (protegido)
    */
-  @UseGuards(JwtAuthGuard)
   @Patch(':id/rol')
+  @UseGuards(JwtAuthGuard)
   async cambiarRol(
     @Param('id') id: string,
     @Body('rol') rol: string,

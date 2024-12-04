@@ -13,10 +13,10 @@ async function bootstrap() {
   });
 
   // Configuración del puerto
-  const PORT = 3000;
+  const PORT = 3300;
   await app.listen(PORT);
 
- // Logger.log(`NestJS Application is running on: http://localhost:${PORT}`, 'Bootstrap');
+ Logger.log(`NestJS Application is running on: http://localhost:${PORT}`, 'Bootstrap');
 }
 
 bootstrap();
