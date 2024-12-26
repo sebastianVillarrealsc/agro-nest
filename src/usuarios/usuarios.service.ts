@@ -145,6 +145,7 @@ export class UsuariosService {
         ).join(', ')}`,
       );
     }
+    
 
     usuario.rol = nuevoRol;
     return this.usuariosRepository.save(usuario);
@@ -169,4 +170,101 @@ export class UsuariosService {
     const salt = await bcrypt.genSalt();
     return bcrypt.hash(password, salt);
   }
+  async filtrarPorCiudad(ciudad: string): Promise<Usuario[]> {
+    return this.usuariosRepository.createQueryBuilder('usuario')
+      .where('usuario.ciudad LIKE :ciudad', { ciudad: `%${ciudad}%` })
+      .getMany();
+  }
+   /**
+   * Obtener usuarios por rol (proveedor o cliente)
+   */
+   async obtenerUsuariosPorRol(rol: RolesPermitidos): Promise<Usuario[]> {
+    return this.usuariosRepository.find({ where: { rol } });
+  }
+
+  /**
+   * Asociar un producto a un proveedor
+   */
+  async agregarProductoAProveedor(id: string, productoDto: any): Promise<any> {
+    const usuario = await this.obtenerUsuarioPorId(id);
+
+    if (usuario.rol !== RolesPermitidos.ProveedorInsumos) {
+      throw new BadRequestException('El usuario no es un proveedor.');
+    }
+
+    // Aquí se debería manejar la lógica para guardar el producto
+    // Esto podría incluir un repositorio de productos relacionado con el usuario
+    const producto = {
+      ...productoDto,
+      proveedorId: id,
+    };
+    // Simulación de guardado (reemplazar con lógica real)
+    return producto; // Placeholder
+  }
+
+  /**
+   * Obtener productos de un proveedor
+   */
+  async obtenerProductosDeProveedor(id: string): Promise<any[]> {
+    const usuario = await this.obtenerUsuarioPorId(id);
+
+    if (usuario.rol !== RolesPermitidos.ProveedorInsumos) {
+      throw new BadRequestException('El usuario no es un proveedor.');
+    }
+
+    // Aquí se debería manejar la lógica para obtener los productos
+    // Simulación de productos asociados al proveedor
+    const productos = [
+      { id: 1, nombre: 'Producto 1', proveedorId: id },
+      { id: 2, nombre: 'Producto 2', proveedorId: id },
+    ];
+    return productos; // Placeholder
+  }
+
+  /**
+   * Buscar usuarios con filtros avanzados
+   */
+  async buscarUsuariosAvanzado(query: { [key: string]: string }): Promise<Usuario[]> {
+    const qb = this.usuariosRepository.createQueryBuilder('usuario');
+
+    // Agregar filtros según el query recibido
+    if (query.rol) {
+      qb.andWhere('usuario.rol = :rol', { rol: query.rol });
+    }
+    if (query.ciudad) {
+      qb.andWhere('usuario.ciudad LIKE :ciudad', { ciudad: `%${query.ciudad}%` });
+    }
+    if (query.servicio) {
+      qb.andWhere('usuario.servicio LIKE :servicio', { servicio: `%${query.servicio}%` });
+    }
+
+    return qb.getMany();
+  }
+  async buscarPorCategoria(servicio: string, ubicacion: string): Promise<Usuario[]> {
+    const usuarios = await this.usuariosRepository
+      .createQueryBuilder('usuario')
+      .where('LOWER(usuario.servicioOfrecido) LIKE :servicio', { servicio: `%${servicio.toLowerCase()}%` })
+      .getMany();
+  
+    if (ubicacion) {
+      // Simulación: Ordenar usuarios por distancia. Implementar lógica real si tienes datos geográficos.
+      usuarios.sort((a, b) => {
+        const distanciaA = this.calcularDistancia(ubicacion, a.ciudad);
+        const distanciaB = this.calcularDistancia(ubicacion, b.ciudad);
+        return distanciaA - distanciaB;
+      });
+    }
+  
+    return usuarios;
+  }
+  
+  private calcularDistancia(ubicacionUsuario: string, ubicacionOtro: string): number {
+    // Implementa una función real de cálculo de distancia aquí.
+    // Por ahora, simulamos con valores aleatorios.
+    return Math.random() * 100; // Simulación
+  }
+  
 }
+  
+  
+

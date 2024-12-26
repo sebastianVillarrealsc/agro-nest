@@ -1,4 +1,4 @@
-import { IsUUID, IsInt, IsPositive, IsDecimal } from 'class-validator';
+import { IsUUID, IsInt, IsPositive, IsOptional } from 'class-validator';
 
 export class CrearTransaccionDto {
   @IsUUID()
@@ -8,6 +8,7 @@ export class CrearTransaccionDto {
   @IsPositive()
   cantidad: number;
 
-  @IsDecimal()
-  monto: number; // Monto pagado
+  @IsOptional()
+  @IsPositive()
+  monto?: number; // Monto pagado (opcional)
 }
